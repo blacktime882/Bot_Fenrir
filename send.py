@@ -109,19 +109,8 @@ def get_faction_for_node(node_key):
     if node_info:
         faction_key = node_info.get("faction", "")
         if faction_key:
-            # Try using ExportFactions + lang dict
-            factions = _cache.get("factions", {})
-            faction_data = factions.get(faction_key, {})
-            faction_name_key = faction_data.get("name", "")
-            if faction_name_key:
-                lang_dict = _cache.get("lang", {})
-                if faction_name_key in lang_dict:
-                    return lang_dict[faction_name_key]
-                base_name = faction_name_key.split("/")[-1]
-                if base_name in lang_dict:
-                    return lang_dict[base_name]
-            # Fallback: use hardcoded map with full faction_key
-            simple_map = {
+            # Direct mapping from faction key to Russian name
+            faction_names = {
                 "FC_GRINEER": "Гринер",
                 "FC_CORPUS": "Корпус",
                 "FC_INFESTATION": "Заражённые",
@@ -133,8 +122,9 @@ def get_faction_for_node(node_key):
                 "FC_SCALDRA": "Скальдра",
                 "FC_TECHROT": "Техрот",
                 "FC_DUVIRI": "Дувири",
+                "FC_TENNO": "Тенно",
             }
-            return simple_map.get(faction_key, faction_key.replace("FC_", "").title())
+            return faction_names.get(faction_key, faction_key.replace("FC_", "").title())
     return "Корпус"
 
 
