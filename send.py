@@ -41,6 +41,18 @@ FACTION_WEAKNESSES = {
     "Narmer": [("🟡", "Радиация"), ("🔴", "Рассечение")],
 }
 
+# Map raw faction keys to English names for weakness lookup
+FACTION_KEY_MAP = {
+    "FC_GRINEER": "Grineer",
+    "FC_CORPUS": "Corpus",
+    "FC_INFESTATION": "Infested",
+    "FC_CORRUPTED": "Corrupted",
+    "FC_OROKIN": "Corrupted",  # Orokin uses Corrupted weaknesses
+    "FC_SENTIENT": "Sentient",
+    "FC_NARMER": "Narmer",
+    "FC_MITW": "Infested",  # MitW uses Infested weaknesses
+}
+
 _cache = {}
 
 
@@ -92,6 +104,14 @@ def get_faction_for_node(node_key):
         if faction_key:
             return loc(faction_key)
     return "Корпус"
+
+
+def get_faction_key_for_node(node_key):
+    """Return the raw faction key (e.g., 'FC_GRINEER') for weakness lookup."""
+    node_info = get_node_info(node_key)
+    if node_info:
+        return node_info.get("faction", "")
+    return ""
 
 
 def get_mission_type_for_node(node_key):
@@ -189,16 +209,17 @@ def build_current_embed(current):
     f_emoji = FACTION_EMOJI.get(faction, "⚔️")
     m_emoji = MISSION_EMOJI.get(mtype, "🎮")
     
+    faction_key = get_faction_key_for_node(node_key)
+    
     tier = get_tier(node_key)
     cfg = TIER_CONFIG.get(tier, TIER_CONFIG["F"])
     
     time_str = dt.strftime("%H:%M")
     
     weaknesses = []
-    for f in ["Grineer", "Corpus", "Infested", "Corrupted"]:
-        if f.lower() in faction.lower():
-            weaknesses = FACTION_WEAKNESSES.get(f, [])
-            break
+    faction_eng = FACTION_KEY_MAP.get(faction_key.upper())
+    if faction_eng:
+        weaknesses = FACTION_WEAKNESSES.get(faction_eng, [])
     
     weak_str = "  ".join(f"{e} {n}" for e, n in weaknesses) if weaknesses else "—"
     
@@ -245,15 +266,25 @@ def build_next_embed(next_arbi):
     f_emoji = FACTION_EMOJI.get(faction, "⚔️")
     m_emoji = MISSION_EMOJI.get(mtype, "🎮")
     
+    faction_key = get_faction_key_for_node(node_key)
+    
     tier = get_tier(node_key)
     cfg = TIER_CONFIG.get(tier, TIER_CONFIG["F"])
     
     time_str = dt.strftime("%H:%M UTC")
     
+    weaknesses = []
+    faction_eng = FACTION_KEY_MAP.get(faction_key.upper())
+    if faction_eng:
+        weaknesses = FACTION_WEAKNESSES.get(faction_eng, [])
+    
+    weak_str = "  ".join(f"{e} {n}" for e, n in weaknesses) if weaknesses else "—"
+    
     fields = [
         {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
         {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
         {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
+        {"name": "💀 Уязвимости", "value": weak_str, "inline": False},
     ]
     if is_dark_sector_node(node_info):
         ds_bonuses = get_dark_sector_bonuses_from_node(node_info)
