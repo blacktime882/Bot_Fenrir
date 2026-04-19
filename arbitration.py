@@ -129,18 +129,15 @@ def get_node_info(node_key):
     return _cache.get("regions", {}).get(node_key, {})
 
 def get_faction_for_node(node_key):
-    """Return Russian faction name."""
     node_info = get_node_info(node_key)
     faction_key = node_info.get("faction", "") if node_info else ""
     return FACTION_NAMES_RU.get(faction_key, faction_key.replace("FC_", "").title())
 
 def get_faction_key_for_node(node_key):
-    """Return raw faction key (FC_*) for weakness lookup."""
     node_info = get_node_info(node_key)
     return node_info.get("faction", "") if node_info else ""
 
 def get_mission_type_for_node(node_key):
-    """Return Russian mission type name using stable MT_* mapping."""
     node_info = get_node_info(node_key)
     if node_info:
         mtype_key = node_info.get("missionType", "")
@@ -177,17 +174,17 @@ def get_dark_sector_bonuses_from_node(node_info):
     if not ds_data:
         return None
     parts = []
-    res_bonus = ds_data.get("resourceBonus", 0)
-    if res_bonus:
-        parts.append(f"💰 +{int(round(res_bonus * 100))}% ресурсов")
-    xp_bonus = ds_data.get("xpBonus", 0)
-    if xp_bonus:
-        parts.append(f"✨ +{int(round(xp_bonus * 100))}% опыта")
+    res = ds_data.get("resourceBonus", 0)
+    if res:
+        parts.append(f"💰 +{int(round(res * 100))}% ресурсов")
+    xp = ds_data.get("xpBonus", 0)
+    if xp:
+        parts.append(f"✨ +{int(round(xp * 100))}% опыта")
     weapon_type = ds_data.get("weaponXpBonusFor", "")
     weapon_val = ds_data.get("weaponXpBonusVal", 0)
     if weapon_type and weapon_val:
-        wpn_trans = {"Rifles": "Винтовки", "Pistols": "Пистолеты", "Melee": "Ближний бой", "Shotguns": "Дробовики"}
-        wpn_ru = wpn_trans.get(weapon_type, weapon_type)
+        wpn_map = {"Rifles": "Винтовки", "Pistols": "Пистолеты", "Melee": "Ближний бой", "Shotguns": "Дробовики"}
+        wpn_ru = wpn_map.get(weapon_type, weapon_type)
         parts.append(f"🔫 +{int(round(weapon_val * 100))}% XP: {wpn_ru}")
     return "\n".join(parts) if parts else None
 
@@ -209,12 +206,8 @@ def build_current_embed(current):
     ts, node_key = current
     dt = datetime.fromtimestamp(ts, timezone.utc)
     node_info = get_node_info(node_key)
-    if node_info:
-        node_ru = loc(node_info.get("name", ""))
-        planet_ru = loc(node_info.get("systemName", ""))
-    else:
-        node_ru = node_key
-        planet_ru = node_key
+    node_ru = loc(node_info.get("name", "")) if node_info else node_key
+    planet_ru = loc(node_info.get("systemName", "")) if node_info else node_key
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
     f_emoji = FACTION_EMOJI_RU.get(faction, "⚔️")
@@ -252,12 +245,8 @@ def build_next_embed(next_arbi):
     ts, node_key = next_arbi
     dt = datetime.fromtimestamp(ts, timezone.utc)
     node_info = get_node_info(node_key)
-    if node_info:
-        node_ru = loc(node_info.get("name", ""))
-        planet_ru = loc(node_info.get("systemName", ""))
-    else:
-        node_ru = node_key
-        planet_ru = node_key
+    node_ru = loc(node_info.get("name", "")) if node_info else node_key
+    planet_ru = loc(node_info.get("systemName", "")) if node_info else node_key
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
     f_emoji = FACTION_EMOJI_RU.get(faction, "⚔️")
