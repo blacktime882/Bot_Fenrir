@@ -13,13 +13,37 @@ TIER_CONFIG = {
     "F": {"color": 0xED4245, "emoji": "🔴"},
 }
 
-MISSION_EMOJI = {
-    "Survival": "⏱️", "Excavation": "⛏️", "Interception": "📡",
-    "Disruption": "💣", "Defense": "🛡️", "Mobile Defense": "🛡️",
-    "Infested Salvage": "🧟", "Defection": "🏃", "Spy": "👁️",
-    "Capture": "🎯", "Rescue": "🆘", "Exterminate": "🔫",
-    "Sabotage": "💥", "Assault": "⚔️", "Void Flood": "🌀",
-    "Void Cascade": "🌊", "Void Armageddon": "☄️", "Alchemy": "⚗️",
+# Reverse map: Russian mission name -> emoji
+MISSION_EMOJI_RU = {
+    "Выживание": "⏱️",
+    "Защита": "🛡️",
+    "Перехват": "📡",
+    "Дистракция": "💣",
+    "Раскопки": "⛏️",
+    "Захват": "🎯",
+    "Спасательная": "🆘",
+    "Истребление": "🔫",
+    "Саботаж": "💥",
+    "Штурм": "⚔️",
+    "Шпионаж": "👁️",
+    "Дефекция": "🏃",
+    "Территория": "🛡️",
+    "Очистка": "⚗️",
+    "Эвакуация": "🚶",
+    "Артефакт": "📦",
+    "Коррупция": "☣️",
+    "Водопад Пустоты": "🌀",
+    "Армагеддон": "☄️",
+    "Алхимия": "⚗️",
+    "Оборона": "🛡️",
+    "Перестрелка": "🔫",
+    "Убийство": "🎯",
+    "Вознесение": "✨",
+    "Зеркальная оборона": "🛡️",
+    "Легацитная жатва": "🌾",
+    "Сбой": "⚠️",
+    "Потоп Бездны": "🌊",
+    "Цепь": "⛓️",
 }
 
 # Map raw faction keys to English names for weakness lookup
@@ -142,34 +166,40 @@ def get_mission_type_for_node(node_key):
     if node_info:
         mission_name_key = node_info.get("missionName", "")
         if mission_name_key:
-            return loc(mission_name_key)
-        # Fallback to missionType
+            localized = loc(mission_name_key)
+            # loc returns key.split('/')[-1] if not found; check if it's a real translation
+            if localized and "/" not in localized and localized not in ("MissionName_" + mission_name_key.split("/")[-1].replace("MissionName_", "")):
+                # Found a proper translation
+                return localized.title()
+        # Fallback to missionType mapping
         mtype_key = node_info.get("missionType", "")
-        if mtype_key:
-            # Try to convert MT_* to localized name via common mapping
-            mtype_map = {
-                "MT_SURVIVAL": "Выживание",
-                "MT_DEFENSE": "Защита",
-                "MT_INTERCEPTION": "Перехват",
-                "MT_DISRUPTION": "Дистракция",
-                "MT_EXCAVATE": "Раскопки",
-                "MT_CAPTURE": "Захват",
-                "MT_RESCUE": "Спасательная",
-                "MT_EXTERMINATE": "Истребление",
-                "MT_SABOTAGE": "Саботаж",
-                "MT_ASSAULT": "Штурм",
-                "MT_SPY": "Шпионаж",
-                "MT_DEFECTION": "Дефекция",
-                "MT_TERRITORY": "Территория",
-                "MT_PURIFY": "Очистка",
-                "MT_EVACUATION": "Эвакуация",
-                "MT_ARTIFACT": "Артефакт",
-                "MT_CORRUPTION": "Коррупция",
-                "MT_VOID_CASCADE": "Водопад Пустоты",
-                "MT_ARMAGEDDON": "Армагеддон",
-                "MT_ALCHEMY": "Алхимия",
-            }
-            return mtype_map.get(mtype_key, mtype_key.replace("MT_", "").title())
+        mtype_map = {
+            "MT_SURVIVAL": "Выживание",
+            "MT_DEFENSE": "Защита",
+            "MT_INTERCEPTION": "Перехват",
+            "MT_DISRUPTION": "Дистракция",
+            "MT_EXCAVATE": "Раскопки",
+            "MT_CAPTURE": "Захват",
+            "MT_RESCUE": "Спасательная",
+            "MT_EXTERMINATE": "Истребление",
+            "MT_SABOTAGE": "Саботаж",
+            "MT_ASSAULT": "Штурм",
+            "MT_SPY": "Шпионаж",
+            "MT_DEFECTION": "Дефекция",
+            "MT_TERRITORY": "Территория",
+            "MT_PURIFY": "Очистка",
+            "MT_EVACUATION": "Эвакуация",
+            "MT_ARTIFACT": "Артефакт",
+            "MT_CORRUPTION": "Коррупция",
+            "MT_VOID_CASCADE": "Водопад Пустоты",
+            "MT_ARMAGEDDON": "Армагеддон",
+            "MT_ALCHEMY": "Алхимия",
+        }
+        if mtype_key in mtype_map:
+            return mtype_map[mtype_key]
+        # Derive from key
+        base = mtype_key.replace("MT_", "").title()
+        return base if base else "Выживание"
     return "Выживание"
 
 
@@ -257,7 +287,7 @@ def build_current_embed(current):
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
     f_emoji = FACTION_EMOJI_LOC.get(faction, "⚔️")
-    m_emoji = MISSION_EMOJI.get(mtype, "🎮")
+    m_emoji = MISSION_EMOJI_RU.get(mtype, "🎮")
     
     faction_key = get_faction_key_for_node(node_key)
     
@@ -314,7 +344,7 @@ def build_next_embed(next_arbi):
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
     f_emoji = FACTION_EMOJI_LOC.get(faction, "⚔️")
-    m_emoji = MISSION_EMOJI.get(mtype, "🎮")
+    m_emoji = MISSION_EMOJI_RU.get(mtype, "🎮")
     
     faction_key = get_faction_key_for_node(node_key)
     
