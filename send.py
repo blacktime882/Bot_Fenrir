@@ -13,27 +13,6 @@ TIER_CONFIG = {
     "F": {"color": 0xED4245, "emoji": "🔴"},
 }
 
-MISSION_TYPE_MAP = {
-    "Survival": "Выживание",
-    "Excavation": "Раскопки",
-    "Interception": "Перехват",
-    "Disruption": "Нарушение",
-    "Defense": "Оборона",
-    "Mobile Defense": "Мобильная оборона",
-    "Infested Salvage": "Очистка",
-    "Defection": "Дефекция",
-    "Spy": "Шпионаж",
-    "Capture": "Захват",
-    "Rescue": "Спасение",
-    "Exterminate": "Уничтожение",
-    "Sabotage": "Саботаж",
-    "Assault": "Штурм",
-    "Void Flood": "Потоп",
-    "Void Cascade": "Каскад",
-    "Void Armageddon": "Армагеддон",
-    "Alchemy": "Алхимия",
-}
-
 MISSION_EMOJI = {
     "Survival": "⏱️", "Excavation": "⛏️", "Interception": "📡",
     "Disruption": "💣", "Defense": "🛡️", "Mobile Defense": "🛡️",
@@ -41,16 +20,6 @@ MISSION_EMOJI = {
     "Capture": "🎯", "Rescue": "🆘", "Exterminate": "🔫",
     "Sabotage": "💥", "Assault": "⚔️", "Void Flood": "🌀",
     "Void Cascade": "🌊", "Void Armageddon": "☄️", "Alchemy": "⚗️",
-}
-
-FACTION_MAP = {
-    "Grineer": "Гринир",
-    "Corpus": "Корпус",
-    "Infested": "Заражённые",
-    "Corrupted": "Орокин",
-    "Orokin": "Орокин",
-    "Sentient": "Владеющие Разумом",
-    "Narmer": "Нармер",
 }
 
 FACTION_EMOJI = {
@@ -80,18 +49,12 @@ def load_browse_data():
     try:
         headers = {"User-Agent": "WarframeArbiBot/2.0"}
         regions = requests.get("https://browse.wf/warframe-public-export-plus/ExportRegions.json", headers=headers, timeout=15).json()
-        factions = requests.get("https://browse.wf/warframe-public-export-plus/ExportFactions.json", headers=headers, timeout=15).json()
         lang_ru = requests.get("https://browse.wf/warframe-public-export-plus/dict.ru.json", headers=headers, timeout=15).json()
         
         tiers_js = requests.get("https://browse.wf/supplemental-data/arbyTiers.js", headers=headers, timeout=15).text
         tiers = {}
         for m in re.finditer(r'(\w+):\s*"([SABCDF])"', tiers_js):
             tiers[m.group(1)] = m.group(2)
-        
-        mission_types = {}
-        for key, value in lang_ru.items():
-            if "MissionName_" in key:
-                mission_types[key] = value
         
         sched_lines = requests.get("https://browse.wf/arbys.txt", headers=headers, timeout=15).text
         schedule = []
@@ -100,18 +63,11 @@ def load_browse_data():
             if len(parts) == 2:
                 schedule.append((int(parts[0]), parts[1]))
         
-        _cache = {
-            "regions": regions,
-            "factions": factions,
-            "lang": lang_ru,
-            "tiers": tiers,
-            "mission_types": mission_types,
-            "schedule": schedule
-        }
-        print(f"[Data] Loaded: {len(tiers)} tiers, {len(schedule)} schedule entries")
+        _cache = {"regions": regions, "lang": lang_ru, "tiers": tiers, "schedule": schedule}
+        print(f"[Data] Загружено: {len(tiers)} тиров, {len(schedule)} расписание")
         return True
     except Exception as e:
-        print(f"[Data] Error: {e}")
+        print(f"[Data] Ошибка: {e}")
         return False
 
 
@@ -153,7 +109,6 @@ def get_current_and_next_arbitration():
         return None, None
     
     now = datetime.now(timezone.utc).timestamp()
-    current_hour = int(now // 3600) * 3600
     
     current = None
     next_arbi = None
@@ -193,24 +148,23 @@ def build_current_embed(current):
     
     weaknesses = []
     for f in ["Grineer", "Corpus", "Infested", "Corrupted"]:
-        if f.lower() in faction.lower() or faction in f:
+        if f.lower() in faction.lower():
             weaknesses = FACTION_WEAKNESSES.get(f, [])
             break
     
     weak_str = "  ".join(f"{e} {n}" for e, n in weaknesses) if weaknesses else "—"
     
     embed = {
-        "author": {"name": f"🛡️ АРБИТРАЖ • СЕЙЧАС", "icon_url": "https://i.imgur.com/Ar8z6hW.png"},
+        "author": {"name": "⚔️ АРБИТРАЖ СЕЙЧАС ⚔️"},
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"⏳ Заканчивается в **{time_str} UTC**",
         "color": cfg["color"],
+        "thumbnail": {"url": "https://i.imgur.com/Ar8z6hW.png"},
         "fields": [
-            {"name": "Фракция", "value": f"{f_emoji} {faction}", "inline": True},
-            {"name": "Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
-            {"name": "Планета", "value": planet_ru or "—", "inline": True},
-            {"name": "Уязвимости", "value": weak_str, "inline": False},
-            {"name": "Node Key", "value": node_key, "inline": True},
-            {"name": "Время окончания", "value": f"{time_str} UTC", "inline": True},
+            {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
+            {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
+            {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
+            {"name": "💀 Уязвимости", "value": weak_str, "inline": False},
         ],
         "footer": {"text": "browse.wf/arbys"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -243,16 +197,15 @@ def build_next_embed(next_arbi):
     time_str = dt.strftime("%H:%M UTC")
     
     embed = {
-        "author": {"name": f"⏰ АРБИТРАЖ • СКОРО", "icon_url": "https://i.imgur.com/Ar8z6hW.png"},
+        "author": {"name": "⏰ АРБИТРАЖ СКОРО ⏰"},
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"🕐 Начнётся в **{time_str}**",
         "color": cfg["color"],
+        "thumbnail": {"url": "https://i.imgur.com/Ar8z6hW.png"},
         "fields": [
-            {"name": "Фракция", "value": f"{f_emoji} {faction}", "inline": True},
-            {"name": "Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
-            {"name": "Планета", "value": planet_ru or "—", "inline": True},
-            {"name": "Node Key", "value": node_key, "inline": True},
-            {"name": "Время", "value": time_str, "inline": True},
+            {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
+            {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
+            {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
         ],
         "footer": {"text": "browse.wf/arbys"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -267,17 +220,17 @@ def send_webhook(embeds):
         resp = requests.post(WEBHOOK_URL, json=payload, timeout=15)
         return resp.status_code in (200, 204)
     except Exception as e:
-        print(f"[Webhook] Error: {e}")
+        print(f"[Webhook] Ошибка: {e}")
         return False
 
 
 def main():
     print("=" * 50)
-    print("  Warframe Arbitration Notify v5")
+    print("  Warframe Arbitration Notify v6")
     print("=" * 50)
 
     if not load_browse_data():
-        print("[ERROR] Failed to load data")
+        print("[ERROR] Ошибка загрузки данных")
         return
 
     current, next_arbi = get_current_and_next_arbitration()
@@ -286,13 +239,11 @@ def main():
     
     if current:
         embeds.append(build_current_embed(current))
-        print(f"[Current] {current[1]} - {datetime.fromtimestamp(current[0], timezone.utc).strftime('%H:%M')}")
-    else:
-        print("[Info] No current arbitration")
+        print(f"[Текущая] {current[1]} - {datetime.fromtimestamp(current[0], timezone.utc).strftime('%H:%M')}")
     
     if next_arbi:
         embeds.append(build_next_embed(next_arbi))
-        print(f"[Next] {next_arbi[1]} - {datetime.fromtimestamp(next_arbi[0], timezone.utc).strftime('%H:%M UTC')}")
+        print(f"[Следующая] {next_arbi[1]} - {datetime.fromtimestamp(next_arbi[0], timezone.utc).strftime('%H:%M UTC')}")
     
     if not embeds:
         embeds.append({
@@ -300,10 +251,10 @@ def main():
             "description": "На ближайшее время арбитражей нет.",
             "color": 0x99AAB5,
         })
-        print("[Info] No arbitrations in schedule")
+        print("[Инфо] Нет арбитражей в расписании")
 
     ok = send_webhook(embeds)
-    print(f"[Result] {'Success!' if ok else 'Failed'}")
+    print(f"[Результат] {'Успешно!' if ok else 'Ошибка'}")
 
 
 if __name__ == "__main__":
