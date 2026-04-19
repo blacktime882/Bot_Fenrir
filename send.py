@@ -159,7 +159,7 @@ def build_current_embed(current):
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"⏳ Заканчивается в **{time_str} UTC**",
         "color": cfg["color"],
-        "thumbnail": {"url": "https://i.imgur.com/Ar8z6hW.png"},
+        "thumbnail": {"url": "https://static.wikia.nocookie.net/warframe/images/9/98/Arbiters_of_Hexis_Sigil.png"},
         "fields": [
             {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
             {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
@@ -201,7 +201,7 @@ def build_next_embed(next_arbi):
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"🕐 Начнётся в **{time_str}**",
         "color": cfg["color"],
-        "thumbnail": {"url": "https://i.imgur.com/Ar8z6hW.png"},
+        "thumbnail": {"url": "https://static.wikia.nocookie.net/warframe/images/9/98/Arbiters_of_Hexis_Sigil.png"},
         "fields": [
             {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
             {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
@@ -215,7 +215,7 @@ def build_next_embed(next_arbi):
 
 
 def send_webhook(embeds):
-    payload = {"username": "Arbitration Alert", "avatar_url": "https://i.imgur.com/Ar8z6hW.png", "embeds": embeds}
+    payload = {"username": "Arbitration Alert", "avatar_url": "https://static.wikia.nocookie.net/warframe/images/9/98/Arbiters_of_Hexis_Sigil.png", "embeds": embeds}
     try:
         resp = requests.post(WEBHOOK_URL, json=payload, timeout=15)
         return resp.status_code in (200, 204)
