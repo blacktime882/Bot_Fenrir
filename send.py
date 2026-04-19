@@ -17,6 +17,7 @@ TIER_CONFIG = {
 MISSION_EMOJI_RU = {
     "Выживание": "⏱️",
     "Защита": "🛡️",
+    "Оборона": "🛡️",
     "Перехват": "📡",
     "Дистракция": "💣",
     "Раскопки": "⛏️",
@@ -35,15 +36,6 @@ MISSION_EMOJI_RU = {
     "Водопад Пустоты": "🌀",
     "Армагеддон": "☄️",
     "Алхимия": "⚗️",
-    "Оборона": "🛡️",
-    "Перестрелка": "🔫",
-    "Убийство": "🎯",
-    "Вознесение": "✨",
-    "Зеркальная оборона": "🛡️",
-    "Легацитная жатва": "🌾",
-    "Сбой": "⚠️",
-    "Потоп Бездны": "🌊",
-    "Цепь": "⛓️",
 }
 
 # Map raw faction keys to English names for weakness lookup
@@ -76,10 +68,14 @@ FACTION_KEY_MAP = {
     "FC_CORPUS": "Corpus",
     "FC_INFESTATION": "Infested",
     "FC_CORRUPTED": "Corrupted",
-    "FC_OROKIN": "Corrupted",  # Orokin uses Corrupted weaknesses
+    "FC_OROKIN": "Corrupted",
     "FC_SENTIENT": "Sentient",
     "FC_NARMER": "Narmer",
-    "FC_MITW": "Infested",  # MitW uses Infested weaknesses
+    "FC_MITW": "Infested",
+    "FC_SCALDRA": "Grineer",
+    "FC_TECHROT": "Infested",
+    "FC_DUVIRI": "Corrupted",
+    "FC_TENNO": None,  # Tenno have no defined weaknesses
 }
 
 _cache = {}
