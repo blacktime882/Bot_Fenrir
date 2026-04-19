@@ -113,30 +113,29 @@ def get_faction_for_node(node_key):
             faction_data = factions.get(faction_key, {})
             faction_name_key = faction_data.get("name", "")
             if faction_name_key:
-                # Direct lookup in lang dictionary
                 lang_dict = _cache.get("lang", {})
+                # Try direct lookup
                 if faction_name_key in lang_dict:
                     return lang_dict[faction_name_key]
-                # Fallback: try base name
+                # Try base name (last part)
                 base_name = faction_name_key.split("/")[-1]
                 if base_name in lang_dict:
                     return lang_dict[base_name]
-            # Fallback to parsed faction key
-            if faction_key.startswith("FC_"):
-                simple = faction_key[3:].title()
-                # Try to match known names
-                name_map = {
-                    "GRINEER": "Гринер",
-                    "CORPUS": "Корпус",
-                    "INFESTATION": "Заражённые",
-                    "CORRUPTED": "Коррупция",
-                    "OROKIN": "Орокин",
-                    "SENTIENT": "Сентиент",
-                    "NARMER": "Нармер",
-                    "MITW": "Заражённые",
-                }
-                return name_map.get(faction_key[3:].upper(), simple)
-            return faction_key
+            # Fallback: use hardcoded map based on faction_key
+            simple_map = {
+                "FC_GRINEER": "Гринер",
+                "FC_CORPUS": "Корпус",
+                "FC_INFESTATION": "Заражённые",
+                "FC_CORRUPTED": "Коррупция",
+                "FC_OROKIN": "Орокин",
+                "FC_SENTIENT": "Сентиент",
+                "FC_NARMER": "Нармер",
+                "FC_MITW": "Заражённые",
+                "FC_SCALDRA": "Скальдра",
+                "FC_TECHROT": "Техрот",
+                "FC_DUVIRI": "Дувири",
+            }
+            return simple_map.get(faction_key, faction_key)
     return "Корпус"
 
 
