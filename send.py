@@ -109,19 +109,18 @@ def get_faction_for_node(node_key):
     if node_info:
         faction_key = node_info.get("faction", "")
         if faction_key:
+            # Try using ExportFactions + lang dict
             factions = _cache.get("factions", {})
             faction_data = factions.get(faction_key, {})
             faction_name_key = faction_data.get("name", "")
             if faction_name_key:
                 lang_dict = _cache.get("lang", {})
-                # Try direct lookup
                 if faction_name_key in lang_dict:
                     return lang_dict[faction_name_key]
-                # Try base name (last part)
                 base_name = faction_name_key.split("/")[-1]
                 if base_name in lang_dict:
                     return lang_dict[base_name]
-            # Fallback: use hardcoded map based on faction_key
+            # Fallback: use hardcoded map with full faction_key
             simple_map = {
                 "FC_GRINEER": "Гринер",
                 "FC_CORPUS": "Корпус",
@@ -135,7 +134,7 @@ def get_faction_for_node(node_key):
                 "FC_TECHROT": "Техрот",
                 "FC_DUVIRI": "Дувири",
             }
-            return simple_map.get(faction_key, faction_key)
+            return simple_map.get(faction_key, faction_key.replace("FC_", "").title())
     return "Корпус"
 
 
@@ -270,6 +269,8 @@ def build_current_embed(current):
     f_emoji = FACTION_EMOJI_LOC.get(faction, "⚔️")
     m_emoji = MISSION_EMOJI.get(mtype, "🎮")
     
+    faction_key = get_faction_key_for_node(node_key)
+    
     tier = get_tier(node_key)
     cfg = TIER_CONFIG.get(tier, TIER_CONFIG["F"])
     
@@ -322,7 +323,7 @@ def build_next_embed(next_arbi):
     
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
-    f_emoji = FACTION_EMOJI.get(faction, "⚔️")
+    f_emoji = FACTION_EMOJI_LOC.get(faction, "⚔️")
     m_emoji = MISSION_EMOJI.get(mtype, "🎮")
     
     faction_key = get_faction_key_for_node(node_key)
