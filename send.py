@@ -103,6 +103,54 @@ def get_mission_type_for_node(node_key):
     return "Выживание"
 
 
+def is_dark_sector_node(node_info):
+    """Check if the node is a Dark Sector node based on darkSectorData."""
+    if not node_info:
+        return False
+    ds_data = node_info.get("darkSectorData")
+    return ds_data is not None and isinstance(ds_data, dict)
+
+
+def get_dark_sector_bonuses_from_node(node_info):
+    """Return formatted dark sector bonuses string from node info."""
+    ds_data = node_info.get("darkSectorData")
+    if not ds_data:
+        return None
+    
+    parts = []
+    
+    # Resource bonus
+    res_bonus = ds_data.get("resourceBonus", 0)
+    if res_bonus:
+        res_pct = int(round(res_bonus * 100))
+        parts.append(f"💰 +{res_pct}% ресурсов")
+    
+    # XP bonus (general)
+    xp_bonus = ds_data.get("xpBonus", 0)
+    if xp_bonus:
+        xp_pct = int(round(xp_bonus * 100))
+        parts.append(f"✨ +{xp_pct}% опыта")
+    
+    # Weapon-specific XP bonus
+    weapon_type = ds_data.get("weaponXpBonusFor", "")
+    weapon_val = ds_data.get("weaponXpBonusVal", 0)
+    if weapon_type and weapon_val:
+        wpn_pct = int(round(weapon_val * 100))
+        # Translate weapon type to Russian
+        weapon_translations = {
+            "Rifles": "Винтовки",
+            "Pistols": "Пистолеты",
+            "Melee": "Ближний бой",
+            "Shotguns": "Дробовики",
+            "Secondary": "Второстепенное",
+            "Primary": "Основное",
+        }
+        wpn_ru = weapon_translations.get(weapon_type, weapon_type)
+        parts.append(f"🔫 +{wpn_pct}% XP: {wpn_ru}")
+    
+    return "\n".join(parts) if parts else None
+
+
 def get_current_and_next_arbitration():
     schedule = _cache.get("schedule", [])
     if not schedule:
@@ -154,18 +202,24 @@ def build_current_embed(current):
     
     weak_str = "  ".join(f"{e} {n}" for e, n in weaknesses) if weaknesses else "—"
     
+    fields = [
+        {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
+        {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
+        {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
+        {"name": "💀 Уязвимости", "value": weak_str, "inline": False},
+    ]
+    if is_dark_sector_node(node_info):
+        ds_bonuses = get_dark_sector_bonuses_from_node(node_info)
+        if ds_bonuses:
+            fields.append({"name": "🌑 Тёмный сектор", "value": ds_bonuses, "inline": False})
+
     embed = {
         "author": {"name": "⚔️ АРБИТРАЖ СЕЙЧАС ⚔️"},
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"⏳ Заканчивается в **{time_str} UTC**",
         "color": cfg["color"],
         "thumbnail": {"url": "https://browse.wf/Lotus/Interface/Icons/Syndicates/FactionSigilJudge.png"},
-        "fields": [
-            {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
-            {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
-            {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
-            {"name": "💀 Уязвимости", "value": weak_str, "inline": False},
-        ],
+        "fields": fields,
         "footer": {"text": "browse.wf/arbys"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -196,17 +250,23 @@ def build_next_embed(next_arbi):
     
     time_str = dt.strftime("%H:%M UTC")
     
+    fields = [
+        {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
+        {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
+        {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
+    ]
+    if is_dark_sector_node(node_info):
+        ds_bonuses = get_dark_sector_bonuses_from_node(node_info)
+        if ds_bonuses:
+            fields.append({"name": "🌑 Тёмный сектор", "value": ds_bonuses, "inline": False})
+
     embed = {
         "author": {"name": "⏰ АРБИТРАЖ СКОРО ⏰"},
         "title": f"{cfg['emoji']} {tier} Тир | {node_ru}",
         "description": f"🕐 Начнётся в **{time_str}**",
         "color": cfg["color"],
         "thumbnail": {"url": "https://browse.wf/Lotus/Interface/Icons/Syndicates/FactionSigilJudge.png"},
-        "fields": [
-            {"name": "🔻 Фракция", "value": f"{f_emoji} {faction}", "inline": True},
-            {"name": "🎯 Миссия", "value": f"{m_emoji} {mtype}", "inline": True},
-            {"name": "🌍 Планета", "value": planet_ru or "—", "inline": True},
-        ],
+        "fields": fields,
         "footer": {"text": "browse.wf/arbys"},
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
