@@ -157,17 +157,9 @@ def get_faction_key_for_node(node_key):
 
 
 def get_mission_type_for_node(node_key):
-    """Return localized mission type name."""
+    """Return localized mission type name using stable mapping."""
     node_info = get_node_info(node_key)
     if node_info:
-        mission_name_key = node_info.get("missionName", "")
-        if mission_name_key:
-            localized = loc(mission_name_key)
-            # loc returns key.split('/')[-1] if not found; check if it's a real translation
-            if localized and "/" not in localized and localized not in ("MissionName_" + mission_name_key.split("/")[-1].replace("MissionName_", "")):
-                # Found a proper translation
-                return localized.title()
-        # Fallback to missionType mapping
         mtype_key = node_info.get("missionType", "")
         mtype_map = {
             "MT_SURVIVAL": "Выживание",
@@ -193,7 +185,7 @@ def get_mission_type_for_node(node_key):
         }
         if mtype_key in mtype_map:
             return mtype_map[mtype_key]
-        # Derive from key
+        # Fallback: derive from key
         base = mtype_key.replace("MT_", "").title()
         return base if base else "Выживание"
     return "Выживание"
