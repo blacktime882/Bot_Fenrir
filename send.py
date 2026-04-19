@@ -22,14 +22,19 @@ MISSION_EMOJI = {
     "Void Cascade": "🌊", "Void Armageddon": "☄️", "Alchemy": "⚗️",
 }
 
-FACTION_EMOJI = {
-    "Grineer": "🔴",
-    "Corpus": "🔵",
-    "Infested": "🟢",
-    "Corrupted": "⚪",
-    "Orokin": "⚪",
-    "Sentient": "🟣",
-    "Narmer": "🟡",
+# Map raw faction keys to English names for weakness lookup
+FACTION_KEY_MAP = {
+    "FC_GRINEER": "Grineer",
+    "FC_CORPUS": "Corpus",
+    "FC_INFESTATION": "Infested",
+    "FC_CORRUPTED": "Corrupted",
+    "FC_OROKIN": "Corrupted",
+    "FC_SENTIENT": "Sentient",
+    "FC_NARMER": "Narmer",
+    "FC_MITW": "Infested",
+    "FC_SCALDRA": "Grineer",
+    "FC_TECHROT": "Infested",
+    "FC_DUVIRI": "Corrupted",
 }
 
 FACTION_WEAKNESSES = {
@@ -62,6 +67,7 @@ def load_browse_data():
         headers = {"User-Agent": "WarframeArbiBot/2.0"}
         regions = requests.get("https://browse.wf/warframe-public-export-plus/ExportRegions.json", headers=headers, timeout=15).json()
         lang_ru = requests.get("https://browse.wf/warframe-public-export-plus/dict.ru.json", headers=headers, timeout=15).json()
+        factions = requests.get("https://browse.wf/warframe-public-export-plus/ExportFactions.json", headers=headers, timeout=15).json()
         
         tiers_js = requests.get("https://browse.wf/supplemental-data/arbyTiers.js", headers=headers, timeout=15).text
         tiers = {}
@@ -75,8 +81,8 @@ def load_browse_data():
             if len(parts) == 2:
                 schedule.append((int(parts[0]), parts[1]))
         
-        _cache = {"regions": regions, "lang": lang_ru, "tiers": tiers, "schedule": schedule}
-        print(f"[Data] Загружено: {len(tiers)} тиров, {len(schedule)} расписание")
+        _cache = {"regions": regions, "lang": lang_ru, "tiers": tiers, "schedule": schedule, "factions": factions}
+        print(f"[Data] Загружено: {len(tiers)} тиров, {len(schedule)} расписание, {len(factions)} фракций")
         return True
     except Exception as e:
         print(f"[Data] Ошибка: {e}")
@@ -98,11 +104,18 @@ def get_node_info(node_key):
 
 
 def get_faction_for_node(node_key):
+    """Return localized faction name for display."""
     node_info = get_node_info(node_key)
     if node_info:
         faction_key = node_info.get("faction", "")
         if faction_key:
-            return loc(faction_key)
+            factions = _cache.get("factions", {})
+            faction_data = factions.get(faction_key, {})
+            faction_name_key = faction_data.get("name", "")
+            if faction_name_key:
+                return loc(faction_name_key)
+            # Fallback to raw key
+            return faction_key
     return "Корпус"
 
 
@@ -115,11 +128,39 @@ def get_faction_key_for_node(node_key):
 
 
 def get_mission_type_for_node(node_key):
+    """Return localized mission type name."""
     node_info = get_node_info(node_key)
     if node_info:
+        mission_name_key = node_info.get("missionName", "")
+        if mission_name_key:
+            return loc(mission_name_key)
+        # Fallback to missionType
         mtype_key = node_info.get("missionType", "")
         if mtype_key:
-            return loc(mtype_key)
+            # Try to convert MT_* to localized name via common mapping
+            mtype_map = {
+                "MT_SURVIVAL": "Выживание",
+                "MT_DEFENSE": "Защита",
+                "MT_INTERCEPTION": "Перехват",
+                "MT_DISRUPTION": "Дистракция",
+                "MT_EXCAVATE": "Раскопки",
+                "MT_CAPTURE": "Захват",
+                "MT_RESCUE": "Спасательная",
+                "MT_EXTERMINATE": "Истребление",
+                "MT_SABOTAGE": "Саботаж",
+                "MT_ASSAULT": "Штурм",
+                "MT_SPY": "Шпионаж",
+                "MT_DEFECTION": "Дефекция",
+                "MT_TERRITORY": "Территория",
+                "MT_PURIFY": "Очистка",
+                "MT_EVACUATION": "Эвакуация",
+                "MT_ARTIFACT": "Артефакт",
+                "MT_CORRUPTION": "Коррупция",
+                "MT_VOID_CASCADE": "Водопад Пустоты",
+                "MT_ARMAGEDDON": "Армагеддон",
+                "MT_ALCHEMY": "Алхимия",
+            }
+            return mtype_map.get(mtype_key, mtype_key.replace("MT_", "").title())
     return "Выживание"
 
 
@@ -206,10 +247,8 @@ def build_current_embed(current):
     
     faction = get_faction_for_node(node_key)
     mtype = get_mission_type_for_node(node_key)
-    f_emoji = FACTION_EMOJI.get(faction, "⚔️")
+    f_emoji = FACTION_EMOJI_LOC.get(faction, "⚔️")
     m_emoji = MISSION_EMOJI.get(mtype, "🎮")
-    
-    faction_key = get_faction_key_for_node(node_key)
     
     tier = get_tier(node_key)
     cfg = TIER_CONFIG.get(tier, TIER_CONFIG["F"])
