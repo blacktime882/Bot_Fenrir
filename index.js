@@ -13,6 +13,7 @@ const { loadWebhooks, getWebhooks, sendToWebhook, checkArbitrationStart, setLast
 const arbiCommand = require('./commands/arbi');
 const arbiListCommand = require('./commands/arbilist');
 const helpCommand = require('./commands/help');
+const pingCommand = require('./commands/ping');
 
 const client = new Client({
     intents: [
@@ -23,7 +24,7 @@ const client = new Client({
 });
 
 async function registerCommands() {
-    const commands = [arbiCommand.getCommand(), arbiListCommand.getCommand(), helpCommand.getCommand()];
+    const commands = [arbiCommand.getCommand(), arbiListCommand.getCommand(), helpCommand.getCommand(), pingCommand.getCommand()];
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
     try {
@@ -133,6 +134,8 @@ client.on("interactionCreate", async (interaction) => {
             await arbiListCommand.handle(interaction);
         } else if (interaction.commandName === "помощь") {
             await helpCommand.handle(interaction);
+        } else if (interaction.commandName === "пинг") {
+            await pingCommand.handle(interaction);
         }
     } catch (e) {
         console.log(`[Error] ${e.message}`);
