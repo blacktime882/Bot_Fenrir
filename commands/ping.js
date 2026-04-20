@@ -11,8 +11,8 @@ async function handle(interaction) {
     const sent = await interaction.reply({ content: 'Проверяю пинг...', fetchReply: true });
     const latency = sent.createdTimestamp - interaction.createdTimestamp;
 
-    // Выполнить git pull origin main
-    exec('git pull origin main', (error, stdout, stderr) => {
+    // Проверить наличие git и выполнить git pull origin main
+    exec('cd /home/container && git pull origin main', (error, stdout, stderr) => {
         let pullMessage = '';
         if (error) {
             pullMessage = `Ошибка обновления: ${error.message}`;
