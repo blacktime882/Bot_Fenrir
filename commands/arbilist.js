@@ -2,36 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getUpcomingArbitrations } = require('../lib/data');
 const { getLocationName, getFactionName, getMissionName, getPlanetName, getTier, getNodeInfo } = require('../lib/data');
 const { TIER_CONFIG } = require('../lib/constants');
-
-function getFactionEmoji(faction) {
-    const emojiMap = { 
-        "Гринер": "🔴", "Grineer": "🔴", "Griner": "🔴",
-        "Корпус": "🔵", "Corpus": "🔵", 
-        "Заражённые": "🟢", "Infested": "🟢", 
-        "Коррупция": "⚪", "Corrupted": "⚪", 
-        "Сентиент": "🟣", "Sentient": "🟣",
-        "Нармер": "🟡", "Narmer": "🟡"
-    };
-    return emojiMap[faction] || "⚔️";
-}
-
-function getMissionEmoji(mission) {
-    const emojiMap = {
-        "Выживание": "⏱️", "Survival": "⏱️",
-        "Защита": "🛡️", "Defense": "🛡️",
-        "Перехват": "📡", "Interception": "📡",
-        "Дистракция": "💣", "Disruption": "💣",
-        "Раскопки": "⛏️", "Excavation": "⛏️",
-        "Захват": "🎯", "Capture": "🎯",
-        "Спасательная": "🆘", "Rescue": "🆘",
-        "Истребление": "🔫", "Exterminate": "🔫",
-        "Саботаж": "💥", "Sabotage": "💥",
-        "Штурм": "⚔️", "Assault": "⚔️",
-    };
-    return emojiMap[mission.split(" ")[0]] || "🎮";
-}
-
-
+const { getFactionEmoji, getMissionEmoji } = require('../lib/embeds');
 
 function getCommand() {
     return new SlashCommandBuilder()
@@ -67,9 +38,9 @@ async function handle(interaction) {
 
     let fieldCount = 0;
     const maxFields = 25;
-    const fields = [];
 
     for (const [ts, nodeKey] of arbitrations) {
+        // Если достигли макса полей, сохраняем текущий embed и создаем новый
         if (fieldCount >= maxFields) {
             embeds.push(currentEmbed);
             currentEmbed = new EmbedBuilder()
@@ -81,7 +52,6 @@ async function handle(interaction) {
         }
 
         const now = Math.floor(Date.now() / 1000);
-        const relativeTs = ts - now;
         const location = getLocationName(nodeKey);
         const planet = getPlanetName(nodeKey);
         const faction = getFactionName(nodeKey);
@@ -93,22 +63,13 @@ async function handle(interaction) {
         const tierEmoji = TIER_CONFIG[tier]?.emoji || "⚪";
         const relativeStr = `<t:${ts}:R>`;
         
-        fields.push({
+        // Добавляем поле прямо в текущий embed
+        currentEmbed.addFields({
             name: `${tierEmoji} ${tier} | ${location}`,
             value: `${fEmoji} **${planet}**\n${mEmoji} ${mission}\n⏰ ${relativeStr}`,
             inline: true
         });
         fieldCount++;
-    }
-
-    for (let i = 0; i < fields.length; i += 2) {
-        const field1 = fields[i];
-        const field2 = fields[i + 1];
-        if (field2) {
-            currentEmbed.addFields(field1, field2);
-        } else {
-            currentEmbed.addFields(field1);
-        }
     }
 
     embeds.push(currentEmbed);

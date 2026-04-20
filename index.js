@@ -6,6 +6,7 @@ console.log('[Bot] Starting Fenrir Bot v2.0 - Auto-update test');
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+const NOTIFY_CHANNEL_ID = process.env.NOTIFY_CHANNEL_ID;
 
 const { loadData, getArbitrations, getAllArbitrations } = require('./lib/data');
 const { buildArbiEmbed } = require('./lib/embeds');
@@ -111,17 +112,37 @@ client.once("ready", async () => {
     const { current } = getArbitrations();
     if (current) setLastSentArbi(current);
 
+    let isLoading = false;
     setInterval(async () => {
+        // Избегаем race condition - если уже загружаем данные, пропускаем
+        if (isLoading) {
+            console.log(`[Alert Check] Data load in progress, skipping this cycle`);
+            return;
+        }
+
         try {
-            await loadData();
+            isLoading = true;
+            const loaded = await loadData();
+            
+            if (!loaded) {
+                console.log(`[Alert Check] Failed to load data, skipping check`);
+                return;
+            }
+
             const schedule = getAllArbitrations();
             const newArbi = checkArbitrationStart(schedule);
+            
             if (newArbi) {
                 const embed = buildArbiEmbed(newArbi, "current");
-                await sendToWebhook(embed, "arbi");
+                if (embed) {  // Проверяем что embed был успешно создан
+                    await sendToWebhook(embed, "arbi");
+                }
             }
         } catch (e) {
             console.log(`[Alert Error] ${e.message}`);
+            console.log(`[Alert Error] Stack: ${e.stack}`);
+        } finally {
+            isLoading = false;
         }
     }, 60000);
 });
@@ -130,7 +151,7 @@ let lastBotMessageTime = 0;
 
 client.on("messageCreate", async (message) => {
     // Проверяем сообщения в канале уведомлений
-    if (message.channelId !== "1495464275404132532") return;
+    if (!NOTIFY_CHANNEL_ID || message.channelId !== NOTIFY_CHANNEL_ID) return;
 
     // Если сообщение от бота - обновляем время последнего сообщения
     if (message.author.id === client.user.id) {
@@ -150,13 +171,22 @@ setInterval(async () => {
     if (timeSinceLastMessage > 600) { // 10 минут
         console.log(`[Check] No bot message for ${timeSinceLastMessage}s, checking for active arbitration...`);
 
+        if (!NOTIFY_CHANNEL_ID) {
+            console.log(`[Check] NOTIFY_CHANNEL_ID not configured, skipping fallback check`);
+            return;
+        }
+
         const { current } = require('./lib/data').getArbitrations();
         if (current) {
-            const embed = require('./lib/embeds').buildArbiEmbed(current, "current");
-            const channel = await client.channels.fetch("1495464275404132532");
-            await channel.send({ embeds: [embed] });
-            lastBotMessageTime = now;
-            console.log(`[Fallback] Sent arbitration notification to channel`);
+            try {
+                const embed = require('./lib/embeds').buildArbiEmbed(current, "current");
+                const channel = await client.channels.fetch(NOTIFY_CHANNEL_ID);
+                await channel.send({ embeds: [embed] });
+                lastBotMessageTime = now;
+                console.log(`[Fallback] Sent arbitration notification to channel`);
+            } catch (e) {
+                console.log(`[Fallback Error] ${e.message}`);
+            }
         }
     }
 }, 300000); // каждые 5 минут

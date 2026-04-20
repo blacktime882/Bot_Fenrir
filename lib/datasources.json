@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "description": "Источники данных для Bot_Fenrir",
+  "datasources": [
+    {
+      "name": "Регионы Warframe",
+      "url": "https://browse.wf/warframe-public-export-plus/ExportRegions.json",
+      "format": "JSON",
+      "description": "Информация обо всех регионах, локациях, фракциях, типах миссий и врагах",
+      "required": true,
+      "priority": "high"
+    },
+    {
+      "name": "Русский словарь переводов",
+      "url": "https://browse.wf/warframe-public-export-plus/dict.ru.json",
+      "format": "JSON",
+      "description": "Русские переводы названий локаций, врагов, фракций и миссий",
+      "required": true,
+      "priority": "high"
+    },
+    {
+      "name": "Ярусы Арбитража",
+      "url": "https://browse.wf/supplemental-data/arbyTiers.js",
+      "format": "JavaScript",
+      "description": "Рейтинг сложности каждого узла арбитража (S, A, B, C, D, F)",
+      "required": true,
+      "priority": "high"
+    },
+    {
+      "name": "Расписание Арбитража",
+      "url": "https://browse.wf/arbys.txt",
+      "format": "Text (CSV-like)",
+      "description": "Актуальное расписание всех запланированных арбитражей. Формат: timestamp,nodeKey",
+      "required": true,
+      "priority": "critical",
+      "updateFrequency": "Каждый час на сервере browse.wf",
+      "examples": [
+        "1713607200,/Lotus/Levels/ConclaveTylacor/ConclaveTylacor_def#ReinforcedCorridors",
+        "1713610800,/Lotus/Levels/SaturnMoonVor/SaturnMoonVor_def#Void"
+      ]
+    }
+  ],
+  "NO_HARDCODED_ARBITRATION_DATA": true,
+  "NO_MOCK_OR_TEST_DATA": true,
+  "validation": {
+    "all_data_comes_from": "browse.wf external API",
+    "no_fallback_data": true,
+    "cache_behavior": "Local caching only, updated every 60 seconds via API"
+  }
+}
