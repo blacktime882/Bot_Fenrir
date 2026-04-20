@@ -27,16 +27,29 @@ async function registerCommands() {
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
     try {
-        if (DISCORD_GUILD_ID) {
-            // Force delete all commands
-            const existing = await rest.get(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID));
-            console.log(`[Bot] Found ${existing.length} existing commands, deleting...`);
-            for (const cmd of existing) {
-                console.log(`[Bot] Deleting command: ${cmd.name}`);
-                await rest.delete(Routes.applicationGuildCommand(client.user.id, DISCORD_GUILD_ID, cmd.id));
+        // Always delete global commands first
+        const globalCommands = await rest.get(Routes.applicationCommands(client.user.id));
+        if (globalCommands.length > 0) {
+            console.log(`[Bot] Found ${globalCommands.length} global commands, deleting...`);
+            for (const cmd of globalCommands) {
+                console.log(`[Bot] Deleting global command: ${cmd.name}`);
+                await rest.delete(Routes.applicationCommand(client.user.id, cmd.id));
             }
-            // Wait a bit
             await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        if (DISCORD_GUILD_ID) {
+            // Delete guild commands
+            const existing = await rest.get(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID));
+            if (existing.length > 0) {
+                console.log(`[Bot] Found ${existing.length} guild commands, deleting...`);
+                for (const cmd of existing) {
+                    console.log(`[Bot] Deleting guild command: ${cmd.name}`);
+                    await rest.delete(Routes.applicationGuildCommand(client.user.id, DISCORD_GUILD_ID, cmd.id));
+                }
+                // Wait a bit
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
             // Register new commands
             await rest.put(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID), { body: commands });
             console.log("[Bot] Commands registered for guild");
