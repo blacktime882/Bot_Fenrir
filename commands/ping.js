@@ -7,10 +7,7 @@ function getCommand() {
 }
 
 async function handle(interaction) {
-    const sent = await interaction.reply({ content: 'Проверяю пинг...', fetchReply: true });
-    const latency = sent.createdTimestamp - interaction.createdTimestamp;
-
-    interaction.editReply(`🏓 Пинг: ${latency}ms`);
+    await interaction.reply(`🏓 Пинг: ${interaction.client.ws.ping}ms`);
 }
 
 module.exports = { getCommand, handle };
