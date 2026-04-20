@@ -2,6 +2,8 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder, SlashCommandBuilder, REST, Routes } = require('discord.js');
 const fs = require('fs');
 
+console.log('[Bot] Starting Fenrir Bot v2.0 - Auto-update test');
+
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
 
