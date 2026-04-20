@@ -6,7 +6,20 @@
 
 Нажмите **Console** в левом меню
 
-### 2️⃣ Копируйте и вставляйте эти команды
+### 2️⃣ Установите переменную окружения (ВАЖНО!)
+
+⚠️ **СНАЧАЛА СДЕЛАЙТЕ ЭТО, иначе бот не запустится!**
+
+Откройте **Server Settings** → найдите поле **"MAIN_FILE"** или **"Main File"**
+
+Установите значение: `index.js`
+
+Если нет такого поля, в консоли выполните:
+```bash
+export MAIN_FILE=index.js
+```
+
+### 3️⃣ Копируйте и вставляйте эти команды в Console
 
 ```bash
 cd /home/container
@@ -17,7 +30,7 @@ npm install
 
 ⏳ **Ждите 2-3 минуты, пока загрузятся зависимости**
 
-### 3️⃣ Создайте конфиг файл
+### 4️⃣ Создайте конфиг файл
 
 Откройте **File Manager** в HeavenCloud:
 
@@ -33,7 +46,7 @@ NOTIFY_CHANNEL_ID=your_channel_id
 - https://discord.com/developers/applications
 - Select app → Bot → Copy TOKEN
 
-### 4️⃣ Запустите бота
+### 5️⃣ Запустите бота
 
 В Console выполните:
 ```bash
@@ -42,7 +55,7 @@ npm start
 
 Или нажмите кнопку **START** в HeavenCloud
 
-### 5️⃣ Готово! ✅
+### 6️⃣ Готово! ✅
 
 Проверьте в Discord:
 ```
@@ -55,7 +68,11 @@ npm start
 
 ## 🐛 Проблемы?
 
-**"Cannot find module"**
+**"Cannot find module ./index.js" (crash loop)**
+- Установите `MAIN_FILE=index.js` в Server Settings
+- Перезагрузите сервер
+
+**"Cannot find module axios"**
 ```bash
 npm install
 ```

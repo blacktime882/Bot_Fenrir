@@ -78,18 +78,39 @@ NOTIFY_CHANNEL_ID=your_channel_id
 
 ---
 
-### Шаг 3: Настройка автозапуска
+### Шаг 3: Настройка переменных окружения (ВАЖНО!)
 
-В **HeavenCloud Console** посмотрите текущие настройки:
+⚠️ **ЭТО САМОЕ ВАЖНОЕ! Если это не сделать, бот не запустится!**
+
+В **HeavenCloud** откройте **Server Settings** и установите переменные:
+
+#### В разделе "Startup" или "Environment Variables":
+
+```
+MAIN_FILE=index.js
+NODE_ARGS=
+```
+
+#### ИЛИ если вы видите такой интерфейс:
 
 1. Откройте **Server Settings** → **Startup**
+2. Найдите поле **"Main File"** или **"MAIN_FILE"**
+3. Установите значение: `index.js`
+4. Сохраните
 
-2. Проверьте:
-   - **Node Version:** v20+ ✓
-   - **Main File:** `index.js` ✓
-   - **Command:** `node index.js` ✓
+#### ИЛИ установите через консоль:
 
-3. Сохраните изменения
+```bash
+export MAIN_FILE=index.js
+```
+
+**Проверьте что установлено:**
+
+```bash
+echo $MAIN_FILE
+```
+
+Должно вывести: `index.js`
 
 ---
 
@@ -276,6 +297,57 @@ git checkout main
 Это означает что код был залит как ZIP (без git).
 
 **Решение:** Используйте git clone (Вариант A выше)
+
+### Проблема 6: "Cannot find module './index.js'" (Crash loop)
+
+**Это самая частая проблема на HeavenCloud!**
+
+Ошибка:
+```
+Error: Cannot find module './index.js'
+```
+
+**Причина:** Переменная `MAIN_FILE` не установлена или установлена неправильно.
+
+**Решение:**
+
+1. Откройте **Server Settings** в HeavenCloud
+
+2. Найдите раздел "Startup" или "Environment Variables"
+
+3. Установите переменную:
+   ```
+   MAIN_FILE=index.js
+   ```
+
+4. Сохраните и перезагрузите сервер
+
+5. Если нет такого поля, выполните в консоли:
+   ```bash
+   export MAIN_FILE=index.js
+   ```
+
+6. Запустите сервер
+
+**Проверьте:** В консоли должно появиться:
+```
+[Bot] Starting Fenrir Bot v2.0
+[Bot] Logged in as ...
+```
+
+### Проблема 7: Crash loop - сервер падает за 60 секунд
+
+Это происходит когда:
+- `MAIN_FILE` не установлен → Cannot find module
+- `.env` файл не создан → DISCORD_TOKEN not found
+- Зависимости не установлены → Cannot find module axios
+
+**Решение - проверьте по порядку:**
+
+1. ✅ Переменная `MAIN_FILE=index.js` установлена
+2. ✅ Файл `.env` создан с `DISCORD_TOKEN`
+3. ✅ Выполнена команда `npm install`
+4. ✅ Перезагрузите сервер (START)
 
 ---
 
