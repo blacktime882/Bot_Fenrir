@@ -25,11 +25,39 @@ const client = new Client({
 });
 
 async function registerCommands() {
-    const commands = [arbiCommand.getCommand(), arbiListCommand.getCommand(), helpCommand.getCommand(), pingCommand.getCommand(), updateCommand.getCommand()];
+    const commandModules = [
+        { name: 'arbi', module: arbiCommand },
+        { name: 'arbilist', module: arbiListCommand },
+        { name: 'help', module: helpCommand },
+        { name: 'ping', module: pingCommand },
+        { name: 'update', module: updateCommand }
+    ];
+
+    const commands = [];
+    console.log('[Bot] Building commands...');
+
+    for (const { name, module } of commandModules) {
+        try {
+            const command = module.getCommand();
+            commands.push(command);
+            console.log(`[Bot] ✓ Command '${name}' built successfully: ${command.name}`);
+        } catch (error) {
+            console.log(`[Bot] ✗ Failed to build command '${name}': ${error.message}`);
+        }
+    }
+
+    console.log(`[Bot] Total commands to register: ${commands.length}`);
+
+    if (commands.length === 0) {
+        console.log('[Bot] No commands to register, skipping registration');
+        return;
+    }
+
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
     try {
         // Always delete global commands first
+        console.log('[Bot] Checking for existing global commands...');
         const globalCommands = await rest.get(Routes.applicationCommands(client.user.id));
         if (globalCommands.length > 0) {
             console.log(`[Bot] Found ${globalCommands.length} global commands, deleting...`);
@@ -42,6 +70,7 @@ async function registerCommands() {
 
         if (DISCORD_GUILD_ID) {
             // Delete guild commands
+            console.log(`[Bot] Checking for existing guild commands in ${DISCORD_GUILD_ID}...`);
             const existing = await rest.get(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID));
             if (existing.length > 0) {
                 console.log(`[Bot] Found ${existing.length} guild commands, deleting...`);
@@ -53,20 +82,28 @@ async function registerCommands() {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             // Register new commands
-            await rest.put(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID), { body: commands });
-            console.log("[Bot] Commands registered for guild");
+            console.log(`[Bot] Registering ${commands.length} commands for guild...`);
+            const result = await rest.put(Routes.applicationGuildCommands(client.user.id, DISCORD_GUILD_ID), { body: commands });
+            console.log(`[Bot] Commands registered for guild successfully. Registered: ${result.length}`);
         } else {
-            await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-            console.log("[Bot] Commands registered globally");
+            console.log(`[Bot] Registering ${commands.length} commands globally...`);
+            const result = await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+            console.log(`[Bot] Commands registered globally successfully. Registered: ${result.length}`);
         }
     } catch (e) {
-        console.log(`[Bot] Command error: ${e.message}`);
+        console.log(`[Bot] Command registration error: ${e.message}`);
+        if (e.response) {
+            console.log(`[Bot] Response status: ${e.response.status}`);
+            console.log(`[Bot] Response data: ${JSON.stringify(e.response.data, null, 2)}`);
+        }
     }
 }
 
-client.once("clientReady", async () => {
+client.once("ready", async () => {
     console.log(`[Bot] Logged in as ${client.user.tag}`);
-    
+    console.log(`[Bot] Client ID: ${client.user.id}`);
+    console.log(`[Bot] Guild ID configured: ${DISCORD_GUILD_ID || 'Not set (using global commands)'}`);
+
     await registerCommands();
     await loadData();
     loadWebhooks();
@@ -126,23 +163,36 @@ setInterval(async () => {
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
-    console.log(`[Command] ${interaction.commandName} by ${interaction.user.tag}`);
+    console.log(`[Command] Received command: '${interaction.commandName}' by ${interaction.user.tag}`);
 
     try {
         if (interaction.commandName === "арбитраж") {
+            console.log(`[Command] Handling arbi command`);
             await arbiCommand.handle(interaction);
         } else if (interaction.commandName === "арбитраж-список") {
+            console.log(`[Command] Handling arbilist command`);
             await arbiListCommand.handle(interaction);
         } else if (interaction.commandName === "помощь") {
+            console.log(`[Command] Handling help command`);
             await helpCommand.handle(interaction);
         } else if (interaction.commandName === "пинг") {
+            console.log(`[Command] Handling ping command`);
             await pingCommand.handle(interaction);
         } else if (interaction.commandName === "обновить") {
+            console.log(`[Command] Handling update command`);
             await updateCommand.handle(interaction);
+        } else {
+            console.log(`[Command] Unknown command: '${interaction.commandName}'`);
+            await interaction.reply({ content: `Неизвестная команда: ${interaction.commandName}`, ephemeral: true });
         }
     } catch (e) {
-        console.log(`[Error] ${e.message}`);
-        await interaction.reply({ content: `Ошибка: ${e.message}`, ephemeral: true });
+        console.log(`[Error] Command execution failed: ${e.message}`);
+        console.log(`[Error] Stack: ${e.stack}`);
+        try {
+            await interaction.reply({ content: `Ошибка: ${e.message}`, ephemeral: true });
+        } catch (replyError) {
+            console.log(`[Error] Failed to send error reply: ${replyError.message}`);
+        }
     }
 });
 

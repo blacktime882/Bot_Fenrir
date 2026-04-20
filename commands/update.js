@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { exec } = require('child_process');
 
 function getCommand() {
@@ -9,10 +9,14 @@ function getCommand() {
 }
 
 async function handle(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: '❌ У вас нет прав администратора для выполнения этой команды.', flags: MessageFlags.Ephemeral });
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Выполнить git pull origin main
-    exec('cd /home/container && git pull origin main', (error, stdout, stderr) => {
+    exec('git pull origin main', (error, stdout, stderr) => {
         let message = '';
         if (error) {
             console.log(`[Update Error] ${error.message}`);
