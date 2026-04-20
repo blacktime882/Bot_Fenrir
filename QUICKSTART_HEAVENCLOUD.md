@@ -2,7 +2,26 @@
 
 ## 🎯 За 5 минут!
 
-### 1️⃣ Откройте Console в HeavenCloud
+### ⚠️ КОНСОЛЬ НЕ РАБОТАЕТ?
+
+Если консоль HeavenCloud не принимает команды, используй **File Manager вместо консоли**:
+
+1. На **твоём компьютере** скачай ZIP:
+   - https://github.com/blacktime882/Bot_Fenrir/archive/refs/heads/main.zip
+
+2. Распакуй ZIP
+
+3. В HeavenCloud откройте **File Manager** → корневая папка (`/home/container`)
+
+4. Загрузи **ВСЕ файлы** из распакованной папки:
+   - `index.js`, `package.json` и все файлы
+   - Папки: `lib/`, `commands/`, `config/`
+
+5. Перейди к **Шаг 2** ниже ↓
+
+---
+
+### 1️⃣ Откройте Console в HeavenCloud (если работает)
 
 Нажмите **Console** в левом меню
 
@@ -23,8 +42,6 @@ export MAIN_FILE=index.js
 
 ```bash
 cd /home/container
-rm -rf *
-git clone https://github.com/blacktime882/Bot_Fenrir.git .
 npm install
 ```
 

@@ -67,7 +67,8 @@ npm run dev
 
 - 🎮 **HeavenCloud** - [QUICKSTART_HEAVENCLOUD.md](QUICKSTART_HEAVENCLOUD.md) ⭐ **За 5 минут!**
 - 📋 **Полное руководство** - [HEAVENCLOUD_SETUP.md](HEAVENCLOUD_SETUP.md)
-- 🚀 **Другие хостинги** - [DEPLOYMENT.md](DEPLOYMENT.md)
+- � **Если консоль не работает** - [HEAVENCLOUD_FILE_MANAGER_SETUP.md](HEAVENCLOUD_FILE_MANAGER_SETUP.md) ← **ИСПОЛЬЗУЙ ЭТОТ СПОСОБ**
+- �🚀 **Другие хостинги** - [DEPLOYMENT.md](DEPLOYMENT.md)
 - 🔴 **HeavenCloud Crash Loop Fix** - [HEAVENCLOUD_CRASH_LOOP_FIX.md](HEAVENCLOUD_CRASH_LOOP_FIX.md) ← **Если бот не запускается!**
 - ❌ **Ошибка git repository** - [GIT_REPOSITORY_ERROR.md](GIT_REPOSITORY_ERROR.md)
 
