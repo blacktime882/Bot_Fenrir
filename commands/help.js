@@ -13,6 +13,8 @@ async function handle(interaction) {
         .addFields(
             { name: "/арбитраж", value: "Текущий и следующий арбитраж", inline: false },
             { name: "/арбитраж-список", value: "Список ближайших арбитражей", inline: false },
+            { name: "/пинг", value: "Проверить пинг бота", inline: false },
+            { name: "/обновить", value: "Обновить код бота (только админы)", inline: false },
             { name: "/помощь", value: "Показать это сообщение", inline: false },
         );
     await interaction.reply({ embeds: [embed] });
