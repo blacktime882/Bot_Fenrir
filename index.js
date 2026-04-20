@@ -14,6 +14,7 @@ const arbiCommand = require('./commands/arbi');
 const arbiListCommand = require('./commands/arbilist');
 const helpCommand = require('./commands/help');
 const pingCommand = require('./commands/ping');
+const updateCommand = require('./commands/update');
 
 const client = new Client({
     intents: [
@@ -24,7 +25,7 @@ const client = new Client({
 });
 
 async function registerCommands() {
-    const commands = [arbiCommand.getCommand(), arbiListCommand.getCommand(), helpCommand.getCommand(), pingCommand.getCommand()];
+    const commands = [arbiCommand.getCommand(), arbiListCommand.getCommand(), helpCommand.getCommand(), pingCommand.getCommand(), updateCommand.getCommand()];
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
     try {
@@ -136,6 +137,8 @@ client.on("interactionCreate", async (interaction) => {
             await helpCommand.handle(interaction);
         } else if (interaction.commandName === "пинг") {
             await pingCommand.handle(interaction);
+        } else if (interaction.commandName === "обновить") {
+            await updateCommand.handle(interaction);
         }
     } catch (e) {
         console.log(`[Error] ${e.message}`);
