@@ -1,3 +1,9 @@
 {
-  "webhooks": []
+  "webhooks": [
+    {
+      "name": "fissure-notifications",
+      "url": "https://discord.com/api/webhooks/1495836065125236948/1lQu_wpkBT5mdbMKW0LQyPh8cc7E8CST4DDhKRclFbMIBV8Eq2g8yPlYIlqjcX3nNfV_",
+      "events": ["fissure"]
+    }
+  ]
 }

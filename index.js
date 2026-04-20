@@ -4,13 +4,47 @@ const fs = require('fs');
 
 console.log('[Bot] Starting Fenrir Bot v2.0 - Auto-update test');
 
+// Validate environment variables
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
 const NOTIFY_CHANNEL_ID = process.env.NOTIFY_CHANNEL_ID;
+const CHECK_INTERVAL = parseInt(process.env.CHECK_INTERVAL) || 60;
+const FALLBACK_CHECK_INTERVAL = parseInt(process.env.FALLBACK_CHECK_INTERVAL) || 300;
+const FALLBACK_TIMEOUT = parseInt(process.env.FALLBACK_TIMEOUT) || 600;
 
-const { loadData, getArbitrations, getAllArbitrations } = require('./lib/data');
-const { buildArbiEmbed } = require('./lib/embeds');
-const { loadWebhooks, getWebhooks, sendToWebhook, checkArbitrationStart, setLastSentArbi } = require('./lib/webhooks');
+if (!DISCORD_TOKEN || DISCORD_TOKEN.length < 50) {
+    console.log('[ERROR] Invalid DISCORD_TOKEN. Must be a valid bot token.');
+    process.exit(1);
+}
+
+if (DISCORD_GUILD_ID && !/^\d+$/.test(DISCORD_GUILD_ID)) {
+    console.log('[ERROR] Invalid DISCORD_GUILD_ID. Must be a numeric ID.');
+    process.exit(1);
+}
+
+if (NOTIFY_CHANNEL_ID && !/^\d+$/.test(NOTIFY_CHANNEL_ID)) {
+    console.log('[ERROR] Invalid NOTIFY_CHANNEL_ID. Must be a numeric ID.');
+    process.exit(1);
+}
+
+if (isNaN(CHECK_INTERVAL) || CHECK_INTERVAL < 10) {
+    console.log('[ERROR] Invalid CHECK_INTERVAL. Must be a number >= 10 seconds.');
+    process.exit(1);
+}
+
+if (isNaN(FALLBACK_CHECK_INTERVAL) || FALLBACK_CHECK_INTERVAL < 10) {
+    console.log('[ERROR] Invalid FALLBACK_CHECK_INTERVAL. Must be a number >= 10 seconds.');
+    process.exit(1);
+}
+
+if (isNaN(FALLBACK_TIMEOUT) || FALLBACK_TIMEOUT < 10) {
+    console.log('[ERROR] Invalid FALLBACK_TIMEOUT. Must be a number >= 10 seconds.');
+    process.exit(1);
+}
+
+const { loadData, getArbitrations, getAllArbitrations, getCurrentFissures } = require('./lib/data');
+const { buildArbiEmbed, buildFissureEmbed } = require('./lib/embeds');
+const { loadWebhooks, getWebhooks, sendToWebhook, checkArbitrationStart, setLastSentArbi, checkFissureStart } = require('./lib/webhooks');
 const arbiCommand = require('./commands/arbi');
 const arbiListCommand = require('./commands/arbilist');
 const helpCommand = require('./commands/help');
@@ -61,18 +95,6 @@ async function registerCommands() {
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
     try {
-        // Always delete global commands first
-        console.log('[Bot] Checking for existing global commands...');
-        const globalCommands = await rest.get(Routes.applicationCommands(client.user.id));
-        if (globalCommands.length > 0) {
-            console.log(`[Bot] Found ${globalCommands.length} global commands, deleting...`);
-            for (const cmd of globalCommands) {
-                console.log(`[Bot] Deleting global command: ${cmd.name}`);
-                await rest.delete(Routes.applicationCommand(client.user.id, cmd.id));
-            }
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
         if (DISCORD_GUILD_ID) {
             // Delete guild commands
             console.log(`[Bot] Checking for existing guild commands in ${DISCORD_GUILD_ID}...`);
@@ -114,10 +136,18 @@ client.once("ready", async () => {
     loadWebhooks();
 
     const { current } = getArbitrations();
-    if (current) setLastSentArbi(current);
+    if (current) {
+        setLastSentArbi(current);
+        // Отправить уведомление о текущем арбитраже при запуске для теста
+        const embed = buildArbiEmbed(current, "current");
+        if (embed) {
+            await sendToWebhook(embed, "arbi");
+            console.log(`[Startup] Sent notification for current arbitration at startup`);
+        }
+    }
 
     let isLoading = false;
-    setInterval(async () => {
+    dataInterval = setInterval(async () => {
         // Избегаем race condition - если уже загружаем данные, пропускаем
         if (isLoading) {
             console.log(`[Alert Check] Data load in progress, skipping this cycle`);
@@ -135,11 +165,21 @@ client.once("ready", async () => {
 
             const schedule = getAllArbitrations();
             const newArbi = checkArbitrationStart(schedule);
-            
+
             if (newArbi) {
                 const embed = buildArbiEmbed(newArbi, "current");
                 if (embed) {  // Проверяем что embed был успешно создан
                     await sendToWebhook(embed, "arbi");
+                }
+            }
+
+            const fissures = getCurrentFissures();
+            const newFissures = checkFissureStart(fissures);
+
+            for (const fissure of newFissures) {
+                const embed = buildFissureEmbed(fissure);
+                if (embed) {
+                    await sendToWebhook(embed, "fissure");
                 }
             }
         } catch (e) {
@@ -148,10 +188,11 @@ client.once("ready", async () => {
         } finally {
             isLoading = false;
         }
-    }, 60000);
+    }, CHECK_INTERVAL * 1000);
 });
 
 let lastBotMessageTime = 0;
+let dataInterval = null;
 
 client.on("messageCreate", async (message) => {
     // Проверяем сообщения в канале уведомлений
@@ -167,12 +208,12 @@ client.on("messageCreate", async (message) => {
     console.log(`[Channel Message] ${message.author.tag}: ${message.content}`);
 });
 
-// Проверка каждые 5 минут: отправлял ли бот сообщение в последние 10 минут
-setInterval(async () => {
+// Проверка fallback: отправлял ли бот сообщение в последние FALLBACK_TIMEOUT секунд
+const fallbackInterval = setInterval(async () => {
     const now = Math.floor(Date.now() / 1000);
     const timeSinceLastMessage = now - lastBotMessageTime;
 
-    if (timeSinceLastMessage > 600) { // 10 минут
+    if (timeSinceLastMessage > FALLBACK_TIMEOUT) {
         console.log(`[Check] No bot message for ${timeSinceLastMessage}s, checking for active arbitration...`);
 
         if (!NOTIFY_CHANNEL_ID) {
@@ -193,7 +234,7 @@ setInterval(async () => {
             }
         }
     }
-}, 300000); // каждые 5 минут
+}, FALLBACK_CHECK_INTERVAL * 1000);
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
@@ -265,5 +306,22 @@ if (!DISCORD_TOKEN) {
     console.log("[ERROR] DISCORD_TOKEN required");
     process.exit(1);
 }
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('[Bot] Received SIGINT, shutting down gracefully...');
+    if (dataInterval) clearInterval(dataInterval);
+    if (fallbackInterval) clearInterval(fallbackInterval);
+    client.destroy();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('[Bot] Received SIGTERM, shutting down gracefully...');
+    if (dataInterval) clearInterval(dataInterval);
+    if (fallbackInterval) clearInterval(fallbackInterval);
+    client.destroy();
+    process.exit(0);
+});
 
 client.login(DISCORD_TOKEN);
