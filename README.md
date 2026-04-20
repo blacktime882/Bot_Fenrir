@@ -61,6 +61,15 @@ npm start
 npm run dev
 ```
 
+## 🏠 Развертывание на хостинге
+
+Подробные инструкции для различных хостингов:
+
+- 🎮 **HeavenCloud** - [QUICKSTART_HEAVENCLOUD.md](QUICKSTART_HEAVENCLOUD.md) ⭐ **За 5 минут!**
+- 📋 **Полное руководство** - [HEAVENCLOUD_SETUP.md](HEAVENCLOUD_SETUP.md)
+- 🚀 **Другие хостинги** - [DEPLOYMENT.md](DEPLOYMENT.md)
+- ❌ **Ошибка git repository** - [GIT_REPOSITORY_ERROR.md](GIT_REPOSITORY_ERROR.md)
+
 ## 📁 Структура проекта
 
 ```
@@ -107,6 +116,17 @@ package.json
 - `[Alert]` - Уведомления об арбитражах
 - `[Error]` - Ошибки
 
-## 📝 Лицензия
+## � Документация
+
+| Документ | Описание |
+|----------|---------|
+| [QUICKSTART_HEAVENCLOUD.md](QUICKSTART_HEAVENCLOUD.md) | ⭐ Быстрая установка на HeavenCloud (5 минут) |
+| [HEAVENCLOUD_SETUP.md](HEAVENCLOUD_SETUP.md) | Полное руководство HeavenCloud |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Развертывание на других хостингах |
+| [DATA_SOURCES.md](DATA_SOURCES.md) | Информация об источниках данных |
+| [VERIFICATION_REPORT.md](VERIFICATION_REPORT.md) | Проверка API browse.wf |
+| [GIT_REPOSITORY_ERROR.md](GIT_REPOSITORY_ERROR.md) | Решение ошибок git |
+
+## �📝 Лицензия
 
 Этот проект использует данные из [browse.wf](https://browse.wf) - публичного Warframe API.
