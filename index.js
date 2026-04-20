@@ -16,6 +16,8 @@ const arbiListCommand = require('./commands/arbilist');
 const helpCommand = require('./commands/help');
 const pingCommand = require('./commands/ping');
 const updateCommand = require('./commands/update');
+const infoCommand = require('./commands/info');
+const statsCommand = require('./commands/stats');
 
 const client = new Client({
     intents: [
@@ -31,7 +33,9 @@ async function registerCommands() {
         { name: 'arbilist', module: arbiListCommand },
         { name: 'help', module: helpCommand },
         { name: 'ping', module: pingCommand },
-        { name: 'update', module: updateCommand }
+        { name: 'update', module: updateCommand },
+        { name: 'info', module: infoCommand },
+        { name: 'stats', module: statsCommand }
     ];
 
     const commands = [];
@@ -211,6 +215,12 @@ client.on("interactionCreate", async (interaction) => {
         } else if (interaction.commandName === "обновить") {
             console.log(`[Command] Handling update command`);
             await updateCommand.handle(interaction);
+        } else if (interaction.commandName === "информация") {
+            console.log(`[Command] Handling info command`);
+            await infoCommand.handle(interaction);
+        } else if (interaction.commandName === "статистика") {
+            console.log(`[Command] Handling stats command`);
+            await statsCommand.handle(interaction);
         } else {
             console.log(`[Command] Unknown command: '${interaction.commandName}'`);
             await interaction.reply({ content: `Неизвестная команда: ${interaction.commandName}`, ephemeral: true });
